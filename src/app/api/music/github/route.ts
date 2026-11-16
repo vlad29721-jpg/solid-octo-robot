@@ -1,91 +1,145 @@
 import { apiError } from "@/lib/server/http";
-import type { SongDef } from "@/lib/playlist";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
-const UFO = "https://raw.githubusercontent.com/AlienOmen/ufo-cut-assets/main/audio/";
-const JUPIXELS = "https://raw.githubusercontent.com/jupixels/game-sounds/main/sounds/music/";
-const EFFACE = "https://raw.githubusercontent.com/effacestudios/Royalty-Free-Music-Pack/master/";
-
-const MOOD: Record<string, string> = {
-  "town-theme": "tavern", "8bit-bossa": "tavern", "chill-lofi": "rest", "happy-lullaby": "rest",
-  "eye-of-the-storm": "battle", "next-to-you": "epic", "forest": "nature",
+export type Track = {
+  id: string; title: string; url: string; duration: number; author: string | null;
+  license: string | null; mood: string; sourceUrl: string | null; repoUrl: string | null; folder?: string;
 };
 
-type Cache = { at: number; tracks: SongDef[]; sources: string[] };
-const globalForCache = globalThis as typeof globalThis & { __hubMusicCache?: Cache };
+const RAW = "https://raw.githubusercontent.com";
+const REPOS: { repo: string; branch: string; license: string; label: string; source: string }[] = [
+  { repo: "SoundSafari/CC0-1.0-Music", branch: "main", license: "CC0-1.0", label: "SoundSafari · 9000+ CC0 треков", source: "https://github.com/SoundSafari/CC0-1.0-Music" },
+  { repo: "AlienOmen/ufo-cut-assets", branch: "main", license: "CC0-1.0", label: "ufo-cut · RPG-музыка и эмбиент", source: "https://github.com/AlienOmen/ufo-cut-assets" },
+  { repo: "Beatscribe/homebrew_vgm", branch: "main", license: "CC0-1.0", label: "Beatscribe · чиптюн", source: "https://github.com/Beatscribe/homebrew_vgm" },
+  { repo: "effacestudios/Royalty-Free-Music-Pack", branch: "master", license: "CC0-1.0", label: "effacestudios · royalty-free пак", source: "https://github.com/effacestudios/Royalty-Free-Music-Pack" },
+  { repo: "jupixels/game-sounds", branch: "main", license: "CC0-1.0", label: "jupixels · оркестровые темы", source: "https://github.com/jupixels/game-sounds" },
+];
 
-async function githubJson<T>(url: string): Promise<T | null> {
+const MOOD_RULES: [string, RegExp][] = [
+  ["battle", /battle|war|fight|boss|combat|epic battle|fury|charge|alarm|danger|tension|драк|битв/i],
+  ["tavern", /tavern|town|inn|folk|dance|jig|party|happy|fest|celtic|bard|village|вальс/i],
+  ["dungeon", /dungeon|cave|dark|crypt|horror|evil|demon|witch|grave|underworld|gothic|organ/i],
+  ["mystery", /mystery|mystic|secret|illusion|shadow|mysterious|riddle|suspense|noir/i],
+  ["rest", /sleep|rest|calm|peace|lullaby|dream|ambient|soft|gentle|piano|nocturne|adagio/i],
+  ["nature", /forest|nature|birds|rain|storm|wind|river|sea|ocean|garden/i],
+  ["epic", /epic|hero|saga|legend|anthem|triumph|glory|march|orchestra|symphon/i],
+  ["classical", /bach|mozart|beethoven|chopin|vivaldi|debussy|haydn|handel|schubert|sonata|concerto|prelude|fugue|waltz/i],
+];
+
+function moodFor(text: string): string {
+  for (const [mood, rule] of MOOD_RULES) if (rule.test(text)) return mood;
+  return "rest";
+}
+
+function prettify(path: string): string {
+  const file = path.split("/").pop() ?? path;
+  return decodeURIComponent(file)
+    .replace(/\.(mp3|ogg|m4a|flac|wav)$/i, "")
+    .replace(/\(chosic\.com\)/gi, "")
+    .replace(/[_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function encodePath(path: string) {
+  return path.split("/").map(encodeURIComponent).join("/");
+}
+
+async function githubTree(repo: string, branch: string) {
   try {
-    const response = await fetch(url, { headers: { Accept: "application/vnd.github+json", "User-Agent": "dnd-master-hub" }, signal: AbortSignal.timeout(9000), cache: "no-store" });
-    if (!response.ok) return null;
-    return await response.json() as T;
+    const response = await fetch(`https://api.github.com/repos/${repo}/git/trees/${branch}?recursive=1`, {
+      headers: { Accept: "application/vnd.github+json", "User-Agent": "dnd-master-hub" },
+      signal: AbortSignal.timeout(15_000),
+      cache: "no-store",
+    });
+    if (!response.ok) return [] as { path: string; size: number }[];
+    const data = (await response.json()) as { tree?: { path: string; type: string; size?: number }[] };
+    return (data.tree ?? [])
+      .filter((item) => item.type === "blob" && /\.(mp3|ogg)$/i.test(item.path) && (item.size ?? 0) > 80_000)
+      .map((item) => ({ path: item.path, size: item.size ?? 0 }));
   } catch {
-    return null;
+    return [] as { path: string; size: number }[];
   }
 }
 
-async function fromUfoCut(): Promise<SongDef[]> {
-  const data = await githubJson<{ content: string; encoding: string }>("https://api.github.com/repos/AlienOmen/ufo-cut-assets/contents/audio/manifest.json");
-  if (!data?.content) return [];
-  let manifest: { sounds?: { name: string; file: string; duration: number; license: string; source?: string; category?: string }[] };
-  try { manifest = JSON.parse(Buffer.from(data.content, "base64").toString()); } catch { return []; }
-  return (manifest.sounds ?? [])
-    .filter((entry) => /^(Music|Ambience)$/i.test(entry.category ?? "") && entry.duration >= 25 && entry.file.endsWith(".mp3") && /CC0|Free/i.test(entry.license))
-    .slice(0, 30)
-    .map((entry) => {
-      const key = Object.keys(MOOD).find((part) => entry.file.includes(part)) ?? "rest";
-      return {
-        id: `ufo-${entry.file.replace(/\.[^.]+$/, "")}`,
-        title: entry.name,
-        mood: MOOD[key] ?? (entry.category === "Ambience" ? "nature" : "rest"),
-        author: "OpenGameArt / ufo-cut-assets",
-        license: entry.license,
-        duration: Math.round(entry.duration),
-        url: `${UFO}${entry.file}`,
-        sourceUrl: entry.source ?? "https://github.com/AlienOmen/ufo-cut-assets",
-        repoUrl: "https://github.com/AlienOmen/ufo-cut-assets",
-      } satisfies SongDef;
-    });
-}
+type Cache = { at: number; tracks: Track[] };
+const store = globalThis as typeof globalThis & { __hubMusicIndex?: Cache };
 
-async function fromJupixels(): Promise<SongDef[]> {
-  return [
-    { id: "gh-call-to-war", title: "Call to War", mood: "battle", author: "Umplix (CC0)", license: "CC0-1.0", duration: 76, url: `${JUPIXELS}call_to_war_01.mp3`, sourceUrl: "https://opengameart.org/content/call-to-war", repoUrl: "https://github.com/jupixels/game-sounds" },
-    { id: "gh-war-lament", title: "Lament of the War", mood: "epic", author: "Cethiel (CC0)", license: "CC0-1.0", duration: 228, url: `${JUPIXELS}war_lament_01.mp3`, sourceUrl: "https://opengameart.org/content/laments-of-the-war", repoUrl: "https://github.com/jupixels/game-sounds" },
-  ];
-}
-
-async function fromEfface(): Promise<SongDef[]> {
-  const tree = await githubJson<{ tree?: { path: string; type: string }[] }>("https://api.github.com/repos/effacestudios/Royalty-Free-Music-Pack/git/trees/master?recursive=1");
-  if (!tree?.tree) return [];
-  return tree.tree
-    .filter((item) => item.type === "blob" && item.path.endsWith(".mp3"))
-    .slice(0, 24)
-    .map((item) => ({
-      id: `eff-${item.path.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`,
-      title: item.path.replace(/\.mp3$/, ""),
-      mood: /fury|alarming|champion|templer/i.test(item.path) ? "battle" : /myster|illusion|unknown|outsider/i.test(item.path) ? "mystery" : /happy|party|bubbles|starter/i.test(item.path) ? "tavern" : "dungeon",
-      author: "effacestudios",
-      license: "CC0-1.0",
-      duration: 180,
-      url: `${EFFACE}${item.path.split("/").map(encodeURIComponent).join("/")}`,
-      sourceUrl: "https://github.com/effacestudios/Royalty-Free-Music-Pack",
-      repoUrl: "https://github.com/effacestudios/Royalty-Free-Music-Pack",
-    }) satisfies SongDef);
+async function buildIndex(force: boolean): Promise<Track[]> {
+  const cached = store.__hubMusicIndex;
+  if (!force && cached && Date.now() - cached.at < 30 * 60_000) return cached.tracks;
+  const results = await Promise.all(
+    REPOS.map(async (meta) => {
+      const files = await githubTree(meta.repo, meta.branch);
+      if (meta.repo === "jupixels/game-sounds") return files.filter((file) => file.path.startsWith("sounds/music/"));
+      if (meta.repo === "AlienOmen/ufo-cut-assets") return files.filter((file) => /audio\/(music|ambience)/i.test(file.path));
+      return files;
+    }),
+  );
+  const seen = new Set<string>();
+  const tracks: Track[] = [];
+  results.forEach((files, index) => {
+    const meta = REPOS[index];
+    for (const file of files) {
+      const url = `${RAW}/${meta.repo}/${meta.branch}/${encodePath(file.path)}`;
+      if (seen.has(url)) continue;
+      seen.add(url);
+      const title = prettify(file.path);
+      tracks.push({
+        id: `${meta.repo.split("/")[0].toLowerCase()}-${file.path.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
+        title,
+        url,
+        duration: 0,
+        author: meta.repo.split("/")[0],
+        license: meta.license,
+        mood: moodFor(`${file.path} ${title}`),
+        sourceUrl: meta.source,
+        repoUrl: meta.source,
+        folder: file.path.split("/").slice(0, -1).join("/") || "root",
+      });
+      if (tracks.length >= 12_000) break;
+    }
+  });
+  store.__hubMusicIndex = { at: Date.now(), tracks };
+  return tracks;
 }
 
 export async function GET(request: Request) {
   try {
-    const force = new URL(request.url).searchParams.get("refresh") === "1";
-    const cache = globalForCache.__hubMusicCache;
-    if (!force && cache && Date.now() - cache.at < 3600_000) return Response.json({ tracks: cache.tracks, sources: cache.sources, cached: true });
-    const results = await Promise.allSettled([fromUfoCut(), fromJupixels(), fromEfface()]);
-    const tracks = results.flatMap((result) => result.status === "fulfilled" ? result.value : []);
-    if (!tracks.length && cache) return Response.json({ tracks: cache.tracks, sources: cache.sources, cached: true, stale: true });
-    const sources = ["AlienOmen/ufo-cut-assets", "jupixels/game-sounds", "effacestudios/Royalty-Free-Music-Pack"];
-    globalForCache.__hubMusicCache = { at: Date.now(), tracks, sources };
-    return Response.json({ tracks, sources, cached: false, count: tracks.length });
+    const params = new URL(request.url).searchParams;
+    const q = (params.get("q") ?? "").trim().toLowerCase();
+    const mood = params.get("mood") ?? "all";
+    const folder = params.get("folder") ?? "";
+    const offset = Math.max(0, Number(params.get("offset") ?? 0) || 0);
+    const limit = Math.min(120, Math.max(1, Number(params.get("limit") ?? 60) || 60));
+    const force = params.get("refresh") === "1";
+    const all = await buildIndex(force);
+    const filtered = all.filter((track) =>
+      (mood === "all" || track.mood === mood) &&
+      (!folder || track.folder === folder) &&
+      (!q || `${track.title} ${track.author ?? ""} ${track.folder ?? ""}`.toLowerCase().includes(q)),
+    );
+    const moods: Record<string, number> = {};
+    const folders = new Map<string, number>();
+    for (const track of all) {
+      moods[track.mood] = (moods[track.mood] ?? 0) + 1;
+      const key = `${track.author ?? ""}/${track.folder ?? ""}`;
+      folders.set(key, (folders.get(key) ?? 0) + 1);
+    }
+    return Response.json({
+      tracks: filtered.slice(offset, offset + limit),
+      total: filtered.length,
+      catalogTotal: all.length,
+      offset,
+      limit,
+      moods,
+      folders: [...folders.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([name, count]) => ({ name, count })),
+      sources: REPOS.map((meta) => ({ name: meta.label, url: meta.source, license: meta.license })),
+      cached: Boolean(store.__hubMusicIndex) && !force,
+    });
   } catch (error) {
     return apiError(error);
   }
