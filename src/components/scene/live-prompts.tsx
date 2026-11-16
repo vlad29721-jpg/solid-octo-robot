@@ -5,7 +5,8 @@ import { Brain, Dices, Music, Target, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useHub } from "@/components/providers/hub-provider";
 import { Button } from "@/components/ui/button";
-import { TRACKS, MusicEngine } from "@/lib/music";
+import { MusicEngine } from "@/lib/music";
+import { formatDuration, musicPosition } from "@/lib/playlist";
 import { useCheckRoll, useConcentrationRoll } from "@/lib/queries";
 import { audioReady, playHeartbeat, unlockAudio } from "@/lib/sfx";
 import { toast } from "@/lib/toast";
@@ -26,9 +27,14 @@ export function LivePrompts() {
   useEffect(() => {
     engine.current ??= new MusicEngine();
     if (!music?.playing || muted) { engine.current.stop(); return; }
-    if (!audioReady() && music.track !== "custom") setNeedsTap(true);
-    engine.current.play(music.track, music.startedAt, music.volume * localVolume, music.customUrl);
-  }, [music?.playing, music?.track, music?.startedAt, music?.customUrl, music?.volume, localVolume, muted, needsTap]);
+    if (!audioReady() && !music.timeline?.length) setNeedsTap(true);
+    engine.current.playState(music, localVolume, () => setNeedsTap(true));
+  }, [music, localVolume, muted]);
+  useEffect(() => {
+    const unlock = () => { unlockAudio(); engine.current?.resume(); setNeedsTap(false); };
+    window.addEventListener("pointerdown", unlock);
+    return () => window.removeEventListener("pointerdown", unlock);
+  }, []);
   useEffect(() => () => engine.current?.stop(), []);
 
   useEffect(() => {
@@ -52,7 +58,10 @@ export function LivePrompts() {
   const campaignId = snapshot.campaign.id;
   const checks = (scene.checks ?? []).filter((check) => check.ownerId === actor.id && !check.result);
   const conc = (scene.concentration ?? []).filter((entry) => entry.ownerId === actor.id);
-  const trackLabel = music ? (music.track === "custom" ? "Своя музыка" : `${TRACKS[music.track].emoji} ${TRACKS[music.track].label}`) : "";
+  const timeline = music?.timeline ?? [];
+  const pos = music?.playing && timeline.length ? musicPosition(timeline, music.startedAt, music.offset ?? 0, music.loop ?? false) : null;
+  const currentSong = pos && !pos.finished ? timeline[pos.index] : timeline[0];
+  const trackLabel = music ? (timeline.length ? `🎵 ${currentSong?.title ?? music.title ?? "Песенник"}` : music.title ?? "Встроенная тема") : "";
 
   return (
     <>
@@ -82,7 +91,8 @@ export function LivePrompts() {
       {music?.playing ? (
         <div className="glass-strong fixed bottom-[5.5rem] left-3 z-[60] flex items-center gap-2 rounded-full px-3 py-1.5 md:bottom-4 md:left-[288px]">
           <Music className="h-3.5 w-3.5 text-gold" /><span className="text-[11px] font-semibold text-parchment">{trackLabel}</span>
-          {needsTap ? <button type="button" onClick={() => { unlockAudio(); setNeedsTap(false); engine.current?.stop(); }} className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-ink">Включить</button> : null}
+          {pos && currentSong ? <span className="font-mono text-[10px] text-muted-ink">{formatDuration(pos.position)} / {formatDuration(currentSong.duration)}</span> : null}
+          {needsTap ? <button type="button" onClick={() => { unlockAudio(); engine.current?.resume(); setNeedsTap(false); }} className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-ink">Включить звук</button> : null}
           <input type="range" min={0} max={1} step={0.05} value={localVolume} onChange={(event) => { setLocalVolume(Number(event.target.value)); localStorage.setItem("hub-music-volume", event.target.value); }} className="w-16 accent-[#D4AF37]" aria-label="Громкость" />
           <button type="button" onClick={() => { const next = !muted; setMuted(next); localStorage.setItem("hub-music-muted", next ? "1" : "0"); }} aria-label="Звук">{muted ? <VolumeX className="h-4 w-4 text-red-300" /> : <Volume2 className="h-4 w-4 text-gold" />}</button>
         </div>

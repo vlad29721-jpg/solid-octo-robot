@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  BookOpen, Bot, ChevronDown, Copy, Dices, Globe2, LayoutDashboard, Map as MapIcon, MessageCircle, Monitor, Radio, RefreshCw,
+  BookOpen, Bot, ChevronDown, Copy, Dices, Globe2, LayoutDashboard, Map as MapIcon, MessageCircle, Monitor, Music2, Radio, RefreshCw,
   ScrollText, Shield, Sparkles, Store, Swords, Users, Wifi, WifiOff,
 } from "lucide-react";
 import { SceneLayer } from "@/components/scene/scene-layer";
@@ -32,6 +32,7 @@ const ALL_NAV = [
   { href: "/chat", label: "Чат", icon: MessageCircle, dmOnly: false },
   { href: "/world", label: "Мир", icon: Globe2, dmOnly: false },
   { href: "/economy", label: "Торговля", icon: Store, dmOnly: false },
+  { href: "/music", label: "Песенник", icon: Music2, dmOnly: false },
   { href: "/scene", label: "Сцена", icon: Sparkles, dmOnly: true },
   { href: "/codex", label: "Кодекс", icon: BookOpen, dmOnly: false },
   { href: "/journal", label: "Журнал", icon: ScrollText, dmOnly: false },

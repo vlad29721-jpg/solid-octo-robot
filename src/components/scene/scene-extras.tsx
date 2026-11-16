@@ -1,6 +1,7 @@
 "use client";
 
-import { Dices, EyeOff, Music, Square, Target, Trash2 } from "lucide-react";
+import { Dices, EyeOff, ExternalLink, Music, Square, Target, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useHub } from "@/components/providers/hub-provider";
 import { Button } from "@/components/ui/button";
@@ -89,10 +90,10 @@ export function MusicPanel() {
   const [url, setUrl] = useState("");
   if (!scene) return null;
   const music = scene.music;
-  const start = (track: MusicTrack, customUrl: string | null = null) => { unlockAudio(); save({ ...scene, music: { track, customUrl, playing: true, volume: music?.volume ?? 0.7, startedAt: new Date().toISOString() } }); };
+  const start = (track: MusicTrack, customUrl: string | null = null) => { unlockAudio(); save({ ...scene, music: { track, trackId: null, title: TRACKS[track as keyof typeof TRACKS]?.label ?? "Своя музыка", customUrl, timeline: [], playing: true, volume: music?.volume ?? 0.7, startedAt: new Date().toISOString(), offset: 0, loop: true } }); };
   return (
     <section className="glass space-y-3 rounded-2xl p-5">
-      <div className="flex items-center gap-2"><Music className="h-4 w-4 text-gold" /><h2 className="font-display text-xl text-parchment">Музыка для всех</h2>{music?.playing ? <Badge variant="success" className="ml-auto">Играет</Badge> : null}</div>
+      <div className="flex items-center gap-2"><Music className="h-4 w-4 text-gold" /><h2 className="font-display text-xl text-parchment">Встроенные темы</h2>{music?.playing ? <Badge variant="success" className="ml-auto">Играет</Badge> : null}<Button asChild size="sm" variant="outline" className="ml-auto"><Link href="/music">Песенник из GitHub<ExternalLink className="h-3.5 w-3.5" /></Link></Button></div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         {(Object.keys(TRACKS) as (keyof typeof TRACKS)[]).map((key) => (
           <button key={key} type="button" onClick={() => start(key)} className={cn("rounded-2xl border p-2.5 text-center", music?.playing && music.track === key ? "border-gold/60 bg-gold/15" : "border-white/10 bg-black/30 hover:border-gold/40")}>
@@ -106,7 +107,7 @@ export function MusicPanel() {
         <input type="range" min={0} max={1} step={0.05} value={music?.volume ?? 0.7} onChange={(event) => music && save({ ...scene, music: { ...music, volume: Number(event.target.value) } })} className="flex-1 accent-[#D4AF37]" />
         <Button size="sm" variant="danger" disabled={!music?.playing} onClick={() => music && save({ ...scene, music: { ...music, playing: false } })}><Square className="h-3.5 w-3.5" />Стоп</Button>
       </div>
-      <p className="text-[11px] text-muted-ink">Мелодии генерируются прямо в браузере, ноты совпадают у всех. Каждый игрок может убавить громкость у себя.</p>
+      <p className="text-[11px] text-muted-ink">Это простые генерируемые темы на случай, когда нет интернета. Настоящие песни (CC0, файлы с GitHub) — в разделе <Link href="/music" className="text-gold underline">«Песенник»</Link>. Каждый игрок может убавить громкость у себя.</p>
     </section>
   );
 }
