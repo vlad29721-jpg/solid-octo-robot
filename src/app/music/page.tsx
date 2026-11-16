@@ -14,7 +14,7 @@ import { Input, Select } from "@/components/ui/field";
 import { Badge, Spinner } from "@/components/ui/primitives";
 import { PageHeader, PageSkeleton } from "@/components/ui/page-header";
 import type { MusicState, SongRef } from "@/lib/dnd/types";
-import { formatDuration, isGitHubAudioUrl, MOODS, musicPosition, saveCustomSongs, songToRef, usePlaylist, type SongDef } from "@/lib/playlist";
+import { formatDuration, isGitHubAudioUrl, MOODS, musicPosition, preloadDuration, saveCustomSongs, songFromApi, songToRef, usePlaylist, type SongDef } from "@/lib/playlist";
 import { useBoardPatch } from "@/lib/queries";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,11 @@ export default function MusicPage() {
   const [search, setSearch] = useState("");
   const [mood, setMood] = useState("all");
   const [remote, setRemote] = useState<SongDef[]>([]);
+  const [remoteTotal, setRemoteTotal] = useState(0);
+  const [catalogTotal, setCatalogTotal] = useState(0);
+  const [remoteMoods, setRemoteMoods] = useState<Record<string, number>>({});
+  const [remoteSources, setRemoteSources] = useState<{ name: string; url: string; license: string }[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [customUrl, setCustomUrl] = useState("");
   const [customTitle, setCustomTitle] = useState("");
@@ -43,15 +48,41 @@ export default function MusicPage() {
     return () => window.clearInterval(timer);
   }, []);
 
+  const fetchCatalog = useMemo(() => async (reset: boolean, refresh = false) => {
+    if (reset) setLoadingMore(true); else setRefreshing(true);
+    try {
+      const params = new URLSearchParams({ q: search.trim(), mood, limit: "60", offset: reset ? "0" : String(remote.length) });
+      if (refresh) params.set("refresh", "1");
+      const response = await fetch(`/api/music/github?${params.toString()}`);
+      if (!response.ok) throw new Error(`Каталог недоступен (${response.status})`);
+      const data = await response.json() as { tracks: Parameters<typeof songFromApi>[0][]; total: number; catalogTotal: number; moods: Record<string, number>; sources: { name: string; url: string; license: string }[] };
+      const mapped = data.tracks.map(songFromApi);
+      setRemote((previous) => reset ? mapped : [...previous, ...mapped.filter((song) => !previous.some((item) => item.id === song.id))]);
+      setRemoteTotal(data.total);
+      setCatalogTotal(data.catalogTotal);
+      setRemoteMoods(data.moods);
+      setRemoteSources(data.sources);
+    } catch (error) {
+      toast.error("Не удалось загрузить каталог", error instanceof Error ? error.message : "Попробуйте позже");
+    } finally {
+      setLoadingMore(false);
+      setRefreshing(false);
+    }
+  }, [search, mood, remote.length]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void fetchCatalog(true); }, search ? 400 : 0);
+    return () => window.clearTimeout(timer);
+  }, [search, mood]);
+
   const catalog = useMemo(() => {
+    const filteredCurated = tracks.filter((song) => (mood === "all" || song.mood === mood) && `${song.title} ${song.author ?? ""}`.toLowerCase().includes(search.toLowerCase()));
     const merged = new Map<string, SongDef>();
-    tracks.forEach((song) => merged.set(song.id, song));
-    remote.forEach((song) => { if (!merged.has(song.id)) merged.set(song.id, song); });
+    filteredCurated.forEach((song) => merged.set(song.url, song));
+    remote.forEach((song) => { if (!merged.has(song.url)) merged.set(song.url, song); });
     return [...merged.values()];
-  }, [tracks, remote]);
-  const filtered = useMemo(() => catalog.filter((song) =>
-    `${song.title} ${song.author ?? ""} ${song.mood}`.toLowerCase().includes(search.toLowerCase()) && (mood === "all" || song.mood === mood),
-  ), [catalog, search, mood]);
+  }, [tracks, remote, search, mood]);
+  const filtered = catalog;
 
   if (!snapshot || !campaign || !scene) return <PageSkeleton />;
 
@@ -63,10 +94,16 @@ export default function MusicPage() {
       playing: true, volume: keepVolume ? (music?.volume ?? 0.7) : 0.7, startedAt: new Date().toISOString(), offset, loop: music?.loop ?? false,
     });
   };
-  const playNow = (song: SongDef) => { play([songToRef(song)]); toast.success("Играет у всей партии", song.title); };
-  const enqueue = (song: SongDef) => {
-    if (!timeline.length) { play([songToRef(song)]); return; }
-    setMusic({ ...(music as MusicState), timeline: [...timeline, songToRef(song)] });
+  const withDuration = async (song: SongDef) => ({ ...songToRef(song), duration: await preloadDuration(song.url, song.duration || 180) });
+  const playNow = async (song: SongDef) => {
+    const ref = await withDuration(song);
+    play([ref]);
+    toast.success("Играет у всей партии", song.title);
+  };
+  const enqueue = async (song: SongDef) => {
+    if (!timeline.length) { await playNow(song); return; }
+    const ref = await withDuration(song);
+    setMusic({ ...(music as MusicState), timeline: [...timeline, ref] });
     toast.success("Добавлено в очередь", song.title);
   };
   const pause = () => {
@@ -96,18 +133,8 @@ export default function MusicPage() {
   };
 
   const refreshGithub = async () => {
-    setRefreshing(true);
-    try {
-      const response = await fetch("/api/music/github?refresh=1");
-      if (!response.ok) throw new Error("GitHub API недоступен");
-      const data = await response.json() as { tracks: SongDef[]; count: number };
-      setRemote(data.tracks);
-      toast.success(`Каталог GitHub обновлён`, `Найдено ${data.tracks.length} CC0-треков`);
-    } catch (error) {
-      toast.error("Не удалось обновить каталог", error instanceof Error ? error.message : "Попробуйте позже");
-    } finally {
-      setRefreshing(false);
-    }
+    await fetchCatalog(true, true);
+    toast.success("Каталог обновлён из GitHub", `${catalogTotal.toLocaleString("ru-RU")} треков доступно`);
   };
 
   const addCustom = (event: FormEvent) => {
@@ -172,7 +199,7 @@ export default function MusicPage() {
           <div className="glass flex flex-wrap items-center gap-2 rounded-2xl p-3">
             <div className="relative min-w-40 flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-ink" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Название, автор, настроение…" className="h-9 pl-8 text-xs" /></div>
             <Select value={mood} onChange={(event) => setMood(event.target.value)} className="h-9 w-44 text-xs"><option value="all">Все настроения</option>{Object.entries(MOODS).map(([key, value]) => <option key={key} value={key}>{value.emoji} {value.label}</option>)}</Select>
-            <Badge variant="outline" className="normal-case tracking-normal">{filtered.length} треков</Badge>
+            <Badge variant="outline" className="normal-case tracking-normal">{remote.length ? `${remote.length} из ${remoteTotal.toLocaleString("ru-RU")}` : `${filtered.length}`} · всего {catalogTotal ? catalogTotal.toLocaleString("ru-RU") : "…"}</Badge>
           </div>
 
           {isLoading ? <div className="glass h-40 animate-pulse rounded-2xl" /> : filtered.length ? (
@@ -189,13 +216,20 @@ export default function MusicPage() {
                     <div className="flex items-center gap-1">
                       {song.sourceUrl ? <Button asChild variant="ghost" size="icon-sm" aria-label="Источник"><a href={song.sourceUrl} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5" /></a></Button> : null}
                       {song.repoUrl ? <Button asChild variant="ghost" size="icon-sm" aria-label="Репозиторий"><a href={song.repoUrl} target="_blank" rel="noreferrer"><Github className="h-3.5 w-3.5" /></a></Button> : null}
-                      {isDm ? <><Button size="sm" variant="glass" onClick={() => enqueue(song)} title="В очередь"><Plus className="h-3.5 w-3.5" /></Button><Button size="sm" onClick={() => playNow(song)}><Play className="h-3.5 w-3.5" />Играть</Button></> : null}
+                      {isDm ? <><Button size="sm" variant="glass" onClick={() => void enqueue(song)} title="В очередь"><Plus className="h-3.5 w-3.5" /></Button><Button size="sm" onClick={() => void playNow(song)}><Play className="h-3.5 w-3.5" />Играть</Button></> : null}
                     </div>
                   </motion.div>
                 );
               })}
             </div>
-          ) : <EmptyState compact title="Треки не найдены" description="Измените поиск или нажмите «Обновить из GitHub», чтобы подтянуть каталог CC0-музыки." icon={Music2} />}
+          ) : loadingMore ? <div className="glass h-40 animate-pulse rounded-2xl" /> : <EmptyState compact title="Треки не найдены" description="Измените поиск или нажмите «Обновить из GitHub», чтобы подтянуть каталог CC0-музыки." icon={Music2} />}
+          {remote.length < remoteTotal ? (
+            <div className="flex justify-center pt-1">
+              <Button variant="outline" onClick={() => void fetchCatalog(false)} disabled={loadingMore || refreshing}>
+                {loadingMore ? <Spinner /> : <Plus className="h-4 w-4" />}Показать ещё 60 · осталось {(remoteTotal - remote.length).toLocaleString("ru-RU")}
+              </Button>
+            </div>
+          ) : null}
         </section>
 
         <aside className="space-y-4">
