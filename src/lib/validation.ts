@@ -257,7 +257,19 @@ export const sceneStateSchema = z.object({
     result: z.object({ roll: z.number().int(), total: z.number().int(), success: z.boolean() }).nullable(),
   })).max(30).optional(),
   concentration: z.array(z.object({ id: idStr, characterId: idStr, characterName: z.string().max(80), ownerId: idStr, dc: z.number().int(), damage: z.number().int(), createdAt: z.string() })).max(20).optional(),
-  music: z.object({ track: z.enum(["tavern", "battle", "dungeon", "forest", "mystery", "custom"]), customUrl: z.string().max(500).nullable(), playing: z.boolean(), volume: z.number().min(0).max(1), startedAt: z.string() }).nullable().optional(),
+  music: z.object({
+    track: z.enum(["github", "tavern", "battle", "dungeon", "forest", "mystery", "custom"]),
+    trackId: z.string().max(120).nullable().optional(),
+    title: z.string().max(160).optional(),
+    customUrl: z.string().max(700).nullable().optional(),
+    timeline: z.array(z.object({
+      id: z.string().max(120), title: z.string().max(160), url: z.string().url().max(700),
+      duration: z.number().min(1).max(7200), author: z.string().max(160).nullable(),
+      license: z.string().max(80).nullable(), mood: z.string().max(40), sourceUrl: z.string().max(700).nullable(),
+    })).max(30).optional(),
+    playing: z.boolean(), volume: z.number().min(0).max(1), startedAt: z.string().max(40),
+    offset: z.number().min(0).max(72000).optional(), loop: z.boolean().optional(),
+  }).nullable().optional(),
   ping: z.object({ id: idStr, x: z.number(), y: z.number(), by: z.string().max(80), at: z.string(), color: z.string().max(30) }).nullable().optional(),
 });
 

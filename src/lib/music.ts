@@ -1,8 +1,11 @@
-import type { MusicTrack } from "./dnd/types";
+import type { MusicState, MusicTrack, SongRef } from "./dnd/types";
+import { musicPosition } from "./playlist";
 import { unlockAudio } from "./sfx";
 
 type TrackDef = { label: string; emoji: string; bpm: number; root: number; scale: number[]; wave: OscillatorType; drone?: boolean; drums?: "light" | "heavy"; birds?: boolean };
-export const TRACKS: Record<Exclude<MusicTrack, "custom">, TrackDef> = {
+
+/** Встроенные темы на случай, когда интернета нет: генерируются в браузере. */
+export const TRACKS: Record<Exclude<MusicTrack, "custom" | "github">, TrackDef> = {
   tavern: { label: "Таверна", emoji: "🍺", bpm: 112, root: 196, scale: [0, 2, 4, 5, 7, 9, 11], wave: "triangle", drums: "light" },
   battle: { label: "Битва", emoji: "⚔️", bpm: 144, root: 110, scale: [0, 2, 3, 5, 7, 8, 10], wave: "sawtooth", drums: "heavy" },
   dungeon: { label: "Подземелье", emoji: "🕯️", bpm: 58, root: 73.4, scale: [0, 1, 3, 5, 7, 8, 10], wave: "sine", drone: true },
@@ -26,29 +29,104 @@ export class MusicEngine {
   private audio: HTMLAudioElement | null = null;
   private nextStep = -1;
   private key = "";
+  private currentUrl: string | null = null;
+  private songState: MusicState | null = null;
+  private songMode = false;
+  private onBlocked: (() => void) | null = null;
+  private localVolume = 1;
 
+  /** Главная точка входа: состояние сцены одинаково у всех игроков. */
+  playState(music: MusicState | null | undefined, localVolume: number, onBlocked?: () => void) {
+    this.localVolume = localVolume;
+    if (!music?.playing) { this.stop(); return; }
+    const timeline = music.timeline ?? [];
+    if (timeline.length) { this.playSongs(music, timeline, localVolume, onBlocked); return; }
+    this.play(music.track, music.startedAt, music.volume * localVolume, music.customUrl ?? null);
+  }
+
+  private playSongs(music: MusicState, timeline: SongRef[], localVolume: number, onBlocked?: () => void) {
+    const key = `songs|${music.startedAt}|${music.offset ?? 0}|${Boolean(music.loop)}|${timeline.map((song) => song.id).join(",")}`;
+    if (this.songMode && this.key === key && this.audio) {
+      this.songState = music; this.onBlocked = onBlocked ?? null;
+      this.setVolume(music.volume * localVolume);
+      this.syncSong(music, timeline);
+      return;
+    }
+    this.stop();
+    this.songMode = true;
+    this.key = key;
+    this.songState = music;
+    this.onBlocked = onBlocked ?? null;
+    const audio = new Audio();
+    audio.preload = "auto";
+    audio.volume = Math.min(1, music.volume * localVolume);
+    this.audio = audio;
+    this.syncSong(music, timeline, true);
+    this.timer = window.setInterval(() => {
+      if (this.songState && this.audio) this.syncSong(this.songState, this.songState.timeline ?? []);
+    }, 1500);
+  }
+
+  private syncSong(music: MusicState, timeline: SongRef[], force = false) {
+    if (!this.audio || !timeline.length) return;
+    const pos = musicPosition(timeline, music.startedAt, music.offset ?? 0, music.loop ?? false);
+    if (!pos) return;
+    const song = timeline[pos.index];
+    this.audio.volume = Math.min(1, music.volume * this.localVolume);
+    if (force || this.currentUrl !== song.url) {
+      this.currentUrl = song.url;
+      this.audio.src = song.url;
+      this.audio.load();
+      const applyOffset = () => {
+        if (!this.audio) return;
+        const duration = Number.isFinite(this.audio.duration) ? this.audio.duration : song.duration;
+        this.audio.currentTime = Math.min(pos.position, Math.max(0, duration - 0.3));
+      };
+      this.audio.addEventListener("loadedmetadata", applyOffset, { once: true });
+      void this.audio.play().catch(() => this.onBlocked?.());
+      return;
+    }
+    if (pos.finished && !(music.loop ?? false)) {
+      if (!this.audio.paused) this.audio.pause();
+      return;
+    }
+    if (this.audio.readyState >= 1) {
+      const duration = Number.isFinite(this.audio.duration) ? this.audio.duration : song.duration;
+      if (Math.abs(this.audio.currentTime - pos.position) > 2.5) this.audio.currentTime = Math.min(pos.position, Math.max(0, duration - 0.3));
+      if (this.audio.paused) void this.audio.play().catch(() => this.onBlocked?.());
+    }
+  }
+
+  /** Вызывается после первого нажатия пользователя: браузеры разрешают звук только после жеста. */
+  resume() {
+    unlockAudio();
+    if (this.audio?.paused) void this.audio.play().catch(() => this.onBlocked?.());
+  }
+
+  /** Встроенные генерируемые темы (без загрузки файлов). */
   play(track: MusicTrack, startedAt: string, volume: number, customUrl: string | null) {
     const key = `${track}|${startedAt}|${customUrl}`;
     if (key === this.key) { this.setVolume(volume); return; }
     this.stop();
     this.key = key;
     const start = new Date(startedAt).getTime();
-    if (track === "custom") {
+    if (track === "custom" || track === "github") {
       if (!customUrl) return;
       const audio = new Audio(customUrl);
-      audio.loop = true; audio.crossOrigin = "anonymous"; audio.volume = Math.min(1, volume);
+      audio.loop = true;
+      audio.volume = Math.min(1, volume);
       audio.addEventListener("loadedmetadata", () => { if (audio.duration && Number.isFinite(audio.duration)) audio.currentTime = ((Date.now() - start) / 1000) % audio.duration; });
-      void audio.play().catch(() => undefined);
+      void audio.play().catch(() => this.onBlocked?.());
       this.audio = audio;
       return;
     }
     const ctx = unlockAudio();
     if (!ctx) return;
+    const def = TRACKS[track];
     this.ctx = ctx;
     this.master = ctx.createGain();
     this.master.gain.value = volume * 0.35;
     this.master.connect(ctx.destination);
-    const def = TRACKS[track];
     const beat = 60 / def.bpm;
     if (def.drone) {
       [def.root / 2, def.root * 0.75].forEach((f0) => {
@@ -106,6 +184,7 @@ export class MusicEngine {
   }
 
   setVolume(volume: number) {
+    this.localVolume = Math.max(0, Math.min(1, volume));
     if (this.master) this.master.gain.value = volume * 0.35;
     if (this.audio) this.audio.volume = Math.min(1, volume);
   }
@@ -119,6 +198,9 @@ export class MusicEngine {
     this.master = null;
     this.audio?.pause();
     this.audio = null;
+    this.currentUrl = null;
+    this.songState = null;
+    this.songMode = false;
     this.nextStep = -1;
     this.key = "";
   }

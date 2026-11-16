@@ -255,8 +255,29 @@ export type SkillCheck = {
   dc: number; secret: boolean; createdAt: string; result: { roll: number; total: number; success: boolean } | null;
 };
 export type ConcentrationCheck = { id: string; characterId: string; characterName: string; ownerId: string; dc: number; damage: number; createdAt: string };
-export type MusicTrack = "tavern" | "battle" | "dungeon" | "forest" | "mystery" | "custom";
-export type MusicState = { track: MusicTrack; customUrl: string | null; playing: boolean; volume: number; startedAt: string };
+export type MusicTrack = "github" | "tavern" | "battle" | "dungeon" | "forest" | "mystery" | "custom";
+export type SongRef = {
+  id: string;
+  title: string;
+  url: string;
+  duration: number;
+  author: string | null;
+  license: string | null;
+  mood: string;
+  sourceUrl: string | null;
+};
+export type MusicState = {
+  track: MusicTrack;
+  trackId?: string | null;
+  title?: string;
+  customUrl?: string | null;
+  timeline?: SongRef[];
+  playing: boolean;
+  volume: number;
+  startedAt: string;
+  offset?: number;
+  loop?: boolean;
+};
 export type Ping = { id: string; x: number; y: number; by: string; at: string; color: string };
 export type SavedMap = { id: string; name: string; state: MapState };
 export type ShopItem = { id: string; item: InventoryItem; price: number; stock: number };
