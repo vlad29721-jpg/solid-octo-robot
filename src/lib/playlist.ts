@@ -3,11 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import type { SongRef } from "./dnd/types";
 
-export type SongDef = SongRef & { repoUrl?: string | null; sourceUrl?: string | null };
+export type SongDef = SongRef & { repoUrl?: string | null; sourceUrl?: string | null; folder?: string };
 export type Playlist = { version: number; note?: string; sources: { name: string; url: string; license: string }[]; tracks: SongDef[] };
 
 export const MOODS: Record<string, { label: string; emoji: string }> = {
   tavern: { label: "Таверна и город", emoji: "🍺" },
+  classical: { label: "Классика", emoji: "🎻" },
   travel: { label: "Дорога", emoji: "🐎" },
   battle: { label: "Битва", emoji: "⚔️" },
   dungeon: { label: "Подземелье", emoji: "🕯️" },
@@ -39,6 +40,30 @@ export function isGitHubAudioUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** Читает реальную длительность файла, чтобы очередь у всей партии шла синхронно. */
+export function preloadDuration(url: string, fallback = 180, timeout = 6000): Promise<number> {
+  if (typeof window === "undefined") return Promise.resolve(fallback);
+  return new Promise((resolve) => {
+    const audio = document.createElement("audio");
+    let done = false;
+    const finish = (value: number) => {
+      if (done) return;
+      done = true;
+      audio.removeAttribute("src");
+      audio.load();
+      resolve(Math.max(1, Math.round(value)));
+    };
+    const timer = window.setTimeout(() => finish(fallback), timeout);
+    audio.preload = "metadata";
+    audio.addEventListener("loadedmetadata", () => {
+      window.clearTimeout(timer);
+      finish(Number.isFinite(audio.duration) && audio.duration > 1 ? audio.duration : fallback);
+    }, { once: true });
+    audio.addEventListener("error", () => { window.clearTimeout(timer); finish(fallback); }, { once: true });
+    audio.src = url;
+  });
 }
 
 export function loadCustomSongs(): SongDef[] {
@@ -74,6 +99,10 @@ export function usePlaylist() {
   });
   const tracks = [...(query.data?.tracks ?? []), ...(custom.data ?? [])];
   return { ...query, tracks, sources: query.data?.sources ?? [], custom: custom.data ?? [], refetchCustom: custom.refetch };
+}
+
+export function songFromApi(raw: { id: string; title: string; url: string; author: string | null; license: string | null; mood: string; sourceUrl: string | null; repoUrl: string | null; folder?: string }): SongDef {
+  return { id: raw.id, title: raw.title, url: raw.url, duration: 0, author: raw.author, license: raw.license, mood: raw.mood, sourceUrl: raw.sourceUrl, repoUrl: raw.repoUrl, folder: raw.folder };
 }
 
 export function musicPosition(timeline: SongRef[], startedAt: string, offset = 0, loop = false) {
