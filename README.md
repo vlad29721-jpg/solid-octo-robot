@@ -1,190 +1,155 @@
-<p align="center">
-  <img src="docs/cover.svg" alt="D&D Master Hub" width="100%" />
-</p>
+<div align="center">
 
-<h1 align="center">D&D Master Hub</h1>
-<p align="center"><b>Премиальный рабочий стол Мастера Dungeons &amp; Dragons 5e</b><br>
-Листы персонажей · боевая карта с туманом войны · трекер инициативы · кубики в реальном времени · чат · мир и квесты · торговля · ИИ-студия на DeepSeek</p>
+# 🐉 D&D Master Hub
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white" alt="Next.js 16">
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white" alt="TypeScript 5.9">
-  <img src="https://img.shields.io/badge/Tailwind-4-black?logo=tailwindcss&logoColor=%23D4AF37" alt="Tailwind CSS 4">
-  <img src="https://img.shields.io/badge/Drizzle-ORM-0ea5e9?logo=postgresql&logoColor=white" alt="Drizzle ORM">
-  <img src="https://img.shields.io/badge/Supabase-Auth%20%7C%20Realtime%20%7C%20Storage-3ecf8e?logo=supabase&logoColor=white" alt="Supabase">
-  <img src="https://img.shields.io/badge/AI-DeepSeek-8b0000" alt="DeepSeek">
-  <img src="https://img.shields.io/badge/licence-CC0%20music%20%2B%20MIT%20code-green" alt="Licence">
-</p>
+### Рабочий стол Мастера D&D 5e — «Хроника и бой»
+
+**Листы персонажей · бой · карта · песенник · дневник кампании — синхронно у всей партии.**
+
+[![Открыть приложение](https://img.shields.io/badge/▶_Открыть_приложение-живой_стол-D4AF37?style=for-the-badge&labelColor=0A0A0A)](https://solid-octo-robot-blue.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs)](#-стек)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](#-стек)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Drizzle-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](#-стек)
+[![Supabase](https://img.shields.io/badge/Supabase-Auth_·_Realtime-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](#-база-и-доступ)
+[![DeepSeek](https://img.shields.io/badge/AI-DeepSeek-8B0000?style=for-the-badge)](#-ии-мастер)
+
+[Возможности](#-возможности) · [Разделы](#-разделы) · [Быстрый старт](#-быстрый-старт) · [Переменные](#-переменные-окружения) · [Деплой](#-деплой)
+
+</div>
+
+> **Один экран вместо шести вкладок.** Мастер ведёт бой с ноутбука, игроки смотрят карту и слушают
+> музыку с телефона — с той же секунды, с тем же порядком ходов и тем же броском кубика.
+> Тёмное золото, эффект «жидкого стекла» и пергамент — чтобы стол выглядел как стол, а не как таблица.
 
 ---
 
-## ✨ Живое демо
+## ✨ Возможности
 
 | | |
 |---|---|
-| 🌐 **Сайт** | https://solid-octo-robot-blue.vercel.app |
-| 🗺 **Демо-кампании** | `GRIMHOLM-7K` · `DRAGON-ASH-42` |
-| 🎭 **Демо-профили** | Эларион Вещий (DM) · Лиана · Торин |
-| 🧬 **Локальный режим** | работает без внешних сервисов: БД создаётся и засевается автоматически |
+| ⚔️ **Живой бой** | Инициатива, раунды, временные хиты, спасброски от смерти, бестиарий, сопротивление и уязвимость к типам урона, отмена последних действий |
+| 🗺️ **Карта 2.0** | Несколько сцен, фон, квадратная и гекс-сетка, перетаскивание фишек, туман войны, стены и двери, рисование и зоны заклинаний, указка |
+| 🎲 **Броски в один клик** | Навык или спасбросок прямо из листа; помеха от состояний считается сама; тайные броски Мастера и проверки по запросу — с закрытым результатом |
+| 🎵 **Песенник** | Настоящие CC0-треки прямо из GitHub: очередь, повтор, пауза и общая громкость, синхронно у всех |
+| 🧙 **Листы по правилам** | Модификаторы, 18 навыков, владение и экспертиза, пассивная внимательность, ячейки заклинаний full/half/third/pact, нагрузка, КД |
+| 💰 **Экономика** | Лавки, общий сундук партии, передача предметов и золота без потерь, генератор добычи |
+| 🌍 **Мир кампании** | Квесты, NPC с тайнами и связями, карта мира с метками, календарь с обратным отсчётом, хроника |
+| 💬 **Стол общения** | Чат с `/roll 2d6+3`, шёпот, тайные записки, реакции, напоминания в Telegram |
+| 🤖 **ИИ-Мастер** | NPC, предыстория, судья правил, события — только через DeepSeek, ключ живёт на сервере |
+| 🔐 **Аккаунты и права** | Email + пароль, HttpOnly-сессия, роли DM и игрока, DM-only заметки, RLS в Supabase |
+| 📱 **PWA** | Устанавливается на телефон, тёмная и светлая тема, акцентный цвет |
 
-> 💡 **Тайный план Мастера** — заметка «Секретный план Мастера» в журнале видна только роли DM. Переключитесь на игрока в диалоге аккаунта и убедитесь, что её не видно.
+## 🗺 Разделы
 
----
+| Маршрут | Раздел | Для кого |
+| --- | --- | --- |
+| `/` | Обзор кампании: партия, бой, журнал | все |
+| `/characters` | Листы персонажей и NPC | все |
+| `/initiative` | Трекер инициативы и бестиарий | все |
+| `/map` | Тактическая карта | все |
+| `/dice` | Кубики и общий лог бросков | все |
+| `/chat` | Чат стола, шёпот, тайные записки | все |
+| `/world` | Квесты, NPC, карта мира, календарь | все |
+| `/economy` | Лавки, сундук партии, добыча | все |
+| `/music` | **Песенник из GitHub** | все (управляет Мастер) |
+| `/scene` | Сцена: картинки, эффекты, погода | Мастер |
+| `/screen` | Полноэкранный вид для телевизора | все |
+| `/codex` · `/journal` | Кодекс правил и журнал сессий | все |
+| `/ai` | ИИ-Мастер | все |
+| `/print/[id]` | Печатный лист персонажа | все |
 
-## 🗺 Возможности
+## ⚔️ Правила, а не картинка
 
-### 🧙 Лист персонажа
-- Автомодульный расчёт: `⌊(score − 10) / 2⌋`, бонус владения по уровню, экспертиза ×2
-- 12 классов: кость хитов, спасброски, подклассы с способностями по уровням, ячейки заклинаний (full/half/third/pact)
-- 18 состояний (отравлен, испуган, парализован…) с механическими эффектами и поправкой к пассивной внимательности
-- Инвентарь с весом, лимит `СИЛ × 15`, вариант «нагрузка», расчёт КД от экипировки
-- Монеты (ПМ/ЗМ/ЭМ/СМ/ММ), ресурсы класса, вдохновение, черты, спутники
-- **Одно действие**: атака оружием → попадание по КД цели → автоурон с критом и типом урона
-- Короткий/долгий отдых, повышение уровня, спасброски от смерти, печать/PDF
-- Пошаговый мастер создания героя: раса → класс → предыстория → покупка очков → навыки
+- модификаторы `⌊(score − 10) / 2⌋`, бонус владения по уровню, экспертиза, спасброски;
+- 12 классов с костями хитов и таблицами ячеек заклинаний, включая пакт-магию колдуна;
+- 18 состояний с механикой и автоподсказкой помех; при 0 HP — «Без сознания» и спасброски от смерти;
+- парсер `2d6+3`, `4d6kh3`, `2d20kl1`, преимущество и помеха, криптографический RNG;
+- нагрузка `СИЛ × 15 / × 30 / × 45`, КД от надетого доспеха и щита, XP и повышение уровня;
+- концентрация после урона: СЛ `max(10, ½ урона)`, «Боевой заклинатель» даёт преимущество.
 
-### ⚔️ Трекер инициативы и бой
-- Сортировка по инициативе и ЛОВ, раунды, текущий ход, журнал событий
-- Монстры и герои, быстрое изменение HP с типом урона, лечение
-- **Бестиарий 17 монстров** с готовыми атаками и авто-инициативой
-- Сложность боя по XP (DMG): пороги «пустяк → смертельный»
-- Эффекты с длительностью в раундах, **отмена до 15 действий назад**
-- Опыт за бой и шкала до следующего уровня
-- Сопротивления/уязвимости/иммунитеты монстров: урон считается сам
+## 🧱 Стек
 
-### 🗺 Боевая карта
-- Своя картинка или сетка, фишки с размерами и цветами
-- **Туман войны кистью** (1×1 / 3×3 / 5×5), игрок видит только открытое
-- **Динамическое освещение**: факелы, тёмное зрение, стены закрывают линию обзора
-- Стены и двери (Мастер открывает щелчком), зоны заклинаний: круг / конус / линия
-- Линейка в футах, рисование, стрелки, помётки-тексты, **указка** двойным кликом
-- Библиотека нескольких карт кампании, ТВ-экран для проектора
+| Слой | Технологии |
+| --- | --- |
+| Фронтенд | **Next.js 16** (App Router) · React 19 · TypeScript · Tailwind CSS 4 |
+| UI | Framer Motion · lucide-react · Radix UI · «liquid glass» и пергамент |
+| Состояние | **Zustand** · **TanStack Query** (оптимистичные обновления с откатом) |
+| Формы | React Hook Form + **Zod** — одни схемы на клиенте и сервере |
+| Бэкенд | Route Handlers · **Drizzle ORM** · PostgreSQL |
+| Сервисы | **Supabase** (Auth, Realtime, Storage) · **DeepSeek** API · Resend · Telegram Bot API |
 
-### 🎲 Кубики
-- Парсер `2d6+3`, `4d6kh3`, `2d20kh1` (преимущество), `2d20kl1` (помеха)
-- Криптографический RNG, до 100 кубикей и 1000 граней
-- Анимация броска, 3D-кубик с материалом и цветом каждого игрока
-- Общий журнал в реальном времени; тайные броски Мастера скрыты от игроков
-- Броски навыков и спасброски из листа в один клик, с учётом состояний и вдохновения
-- Запрос проверки от Мастера — открытый или **тайный** (игрок не узнает результат)
+## 🏗 Архитектура
 
-### 🎭 Ширма Мастера и атмосфера
-- Показ картинок и текстов всем игрокам на весь экран
-- Групповой спасбросок с таблицей результатов
-- 8 звуковых эффектов, погода (дождь/гроза/снег/туман), время суток
-- **Музыка для всех**: 18 CC0-треков с GitHub, очередь, повтор, общая громкость
-- Камера при 0 HP: красное свечение и тряска экрана
+```mermaid
+flowchart LR
+  C["🖥 ПК · 📱 телефон"] --> N["Next.js 16<br/>App Router"]
+  N --> ST["Zustand +<br/>TanStack Query"]
+  N --> API["Route Handlers<br/>/api/*"]
+  API --> DB[("PostgreSQL<br/>Drizzle ORM")]
+  API --> SB["Supabase<br/>Auth · Realtime · Storage"]
+  API --> DS["DeepSeek<br/>chat completions"]
+  C -. "sync каждые 1.5 с" .-> API
+```
 
-### 🌍 Мир и организация
-- Квесты (активны/выполнены/провалены, скрытые), NPC с портретами, связями и тайнами
-- Карта мира с метками, локациями и статусом «посещено»
-- Календарь сессии с обратным отсчётом, **голосование за дату**, отметки посещений
-- Авто-хроника кампании из боёв, повышений уровня и событий
-
-### 💰 Экономика
-- Лавки Мастера: покупка/продажа за золото персонажа, склады, цены
-- Общий сундук партии: вклады, снятие, **деление золота поровну** одной кнопкой
-- Генератор добычи по таблицам DMG (ПО 0–4 … 17+), магические предметы с зарядами и настройкой (макс. 3)
-
-### 💬 Социальное
-- Чат кампании, `/roll 2d6+3` прямо в сообщении, шёпот, **тайные записки Мастера**
-- Реакции 🔥 💀 😱 😂 👍 🎲, уведомления и непрочитанные
-- Telegram-уведомления: тайная записка, напоминание «игра через час»
-
-### 🤖 ИИ-студия (только DeepSeek)
-- Генератор NPC, помощник по предыстории, судья правил (`deepseek-reasoner`), случайные события
-- Контекст кампании подставляется автоматически, история диалога, сохранение в журнал
-- Серверный прокси `/api/deepseek`: ключ не попадает в браузер; обработка 401/402/429/5xx
-
-### 🔐 Платформа
-- Личные аккаунты (email + пароль, scrypt, HttpOnly-сессия) **и** Supabase Auth
-- RLS-правила: игрок видит свой лист и открытые заметки, DM — всё
-- Управление участниками: исключить, передать права Мастера, новый invite-код
-- Экспорт/импорт кампании в JSON, офлайн-кэш листа, PWA на телефон
-- Светлая/тёмная тема, акцентный цвет, кастомные кубики
-- Оптимистичные обновления TanStack Query с rollback, скелетоны, пустые состояния
-
----
-
-## 🛠 Стек
-
-`Next.js 16 (App Router)` · `TypeScript` · `Tailwind CSS 4` · `Drizzle ORM` · `PostgreSQL` · `Supabase (Auth / Realtime / Storage)` · `Zustand` · `TanStack Query` · `React Hook Form + Zod` · `Framer Motion` · `lucide-react` · `DeepSeek API` · `CC0-музыка с GitHub`
-
----
+**Синхронизация.** Мастер меняет состояние → сервер пишет снимок в PostgreSQL → остальные
+получают его через Supabase Realtime, а без него — интервальный `/api/sync`, который загружает
+данные только при реальных изменениях. Музыка хранит `startedAt`, `offset` и длительности треков,
+поэтому позиция песни вычисляется на устройстве и совпадает у всех.
 
 ## 🚀 Быстрый старт
 
 ```bash
+git clone https://github.com/vlad29721-jpg/solid-octo-robot.git
+cd solid-octo-robot
 npm install
-cp .env.local.example .env.local   # заполните ключи
-npx drizzle-kit push               # создать таблицы (или запустите приложение — оно само)
-npm run dev
+cp .env.local.example .env.local     # заполните ключи
+npm run dev                          # http://localhost:3000
 ```
 
-Приложение **самовосстанавливает базу**: `src/db/seed.ts` в транзакции с advisory lock создаёт таблицы (`CREATE TABLE IF NOT EXISTS`) и один раз засевает демо-данные. `/api/health` тоже инициализирует БД.
+База самовосстанавливается: при первом запросе создаются таблицы и демо-данные
+(2 кампании, персонажи, заметки, бой и журнал бросков).
 
----
+**Демо-стол:** Мастер **Эларион Вещий**, игроки **Лиана** и **Торин**.
+Коды приглашений: `GRIMHOLM-7K` и `DRAGON-ASH-42`.
 
-## ☁️ Деплой на Vercel + Supabase
-
-1. **GitHub** — загрузите проект в репозиторий.
-2. **Supabase** — https://supabase.com/dashboard → New project → скопируйте строку **Transaction pooler** (порт `6543`) из окна **Connect** и ключ **anon** из **Settings → API**.
-3. **Vercel** — https://vercel.com/new → Import GitHub-репозиторий → **Environment Variables**:
+## 🔑 Переменные окружения
 
 | Переменная | Обязательна | Назначение |
-|---|---|---|
-| `DATABASE_URL` | ✅ | PostgreSQL (Supabase или локальная) |
-| `DEEPSEEK_API_KEY` | для ИИ | https://platform.deepseek.com/api_keys |
-| `NEXT_PUBLIC_SUPABASE_URL` | для Auth/Realtime | Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | для Auth/Realtime | anon public key |
-| `TELEGRAM_BOT_TOKEN` | для уведомлений | бот у @BotFather |
-| `RESEND_API_KEY` + `EMAIL_FROM` | для писем | https://resend.com |
-| `CRON_SECRET` | для автонапоминаний | любая строка |
-| `NEXT_PUBLIC_SITE_URL` | для ссылок в письмах | адрес сайта |
+| --- | --- | --- |
+| `DATABASE_URL` | ✅ | PostgreSQL. Для Vercel — **Transaction pooler** из Supabase |
+| `NEXT_PUBLIC_SUPABASE_URL` | ➖ | Supabase Auth, Realtime, Storage |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ➖ | Публичный ключ; данные закрывает RLS |
+| `DEEPSEEK_API_KEY` | ➖ | ИИ-Мастер. **Только сервер**, без `NEXT_PUBLIC_` |
+| `NEXT_PUBLIC_SITE_URL` | ➖ | Абсолютные ссылки в письмах |
+| `TELEGRAM_BOT_TOKEN` | ➖ | Напоминания и тайные записки в Telegram |
+| `RESEND_API_KEY` · `EMAIL_FROM` | ➖ | Письма: восстановление пароля |
+| `CRON_SECRET` | ➖ | Защита `/api/cron/reminders` |
 
-4. **Deploy** → откройте `/api/health` → должно быть `"ok":true`.
+> 🔒 Файл `.env.local` в репозиторий не попадает. Секреты добавляйте только в панели Vercel.
 
-> SQL для Supabase: `supabase/00_schema.sql` (таблицы, RLS, Realtime publication, bucket `avatars`, RPC приглашений) и `supabase/01_demo.sql` (демо-данные). Без Supabase включается локальный демо-режим с polling-синхронизацией.
+## 🗄 База и доступ
 
----
+1. Supabase → **SQL Editor** → выполните `supabase/00_schema.sql` (таблицы, RLS, Realtime, Storage).
+2. Затем `supabase/01_demo.sql` — демонстрационные кампании и персонажи.
+3. Включите Email Auth и Realtime для `dice_rolls`, `encounters`, `characters`, `sessions`.
 
-## 🗄 База и RLS
+| Роль | Что видит |
+| --- | --- |
+| Игрок | своих персонажей, открытые заметки, броски и бой своей кампании |
+| Мастер | всё в кампаниях, где он `dm_id`, включая заметки «только для DM» |
 
-| Таблица | Содержит |
-|---|---|
-| `profiles` | роль `dm`/`player`, аватар, telegram, предпочтения |
-| `campaigns` | Мастер, invite-код, статус |
-| `campaign_members` | участники |
-| `characters` | stats/inventory/spells/conditions JSONB |
-| `sessions` | заметки, `is_dm_only` |
-| `encounters` | state боя + история 15 отмен |
-| `dice_rolls` | лог бросков, `hidden` для тайных |
-| `boards` | карта/туман/стены, сцена (музыка, погода, проверки), мир (квесты, NPC, магазины, сундук) |
-| `messages` | чат, шёпот, тайные записки, `/roll` |
-| `assets` | изображения кампании (base64) |
-| `auth_sessions`, `password_resets` | локальные аккаунты |
+Те же правила продублированы на сервере (`src/lib/server/access.ts`): демо работает без Supabase,
+а production остаётся закрытым.
 
-**Правила доступа:** игрок видит только свои `characters` и `sessions` без `is_dm_only`; DM видит всё в своих кампаниях; броски и бой — всем участникам; Storage `avatars/{user_id}` — запись только владельцу. Те же правила продублированы на сервере в `src/lib/server/access.ts`.
+## ☁️ Деплой
 
----
+[![Deploy](https://img.shields.io/badge/Deploy-Vercel-000000?style=for-the-badge&logo=vercel)](https://vercel.com/new/clone?repository-url=https://github.com/vlad29721-jpg/solid-octo-robot)
 
-## 🎵 Музыка и лицензии
+1. **Vercel → Add New Project → Import** репозитория (Next.js определится сам).
+2. Добавьте `DATABASE_URL` и, при желании, остальные ключи для **Production**.
+3. Нажмите **Deploy** и проверьте `/api/health` — должно вернуться `{"ok":true}`.
 
-Песенник берёт **CC0-треки напрямую с GitHub** (файлы не хранятся у нас):
-
-- https://github.com/AlienOmen/ufo-cut-assets (CC0-1.0)
-- https://github.com/jupixels/game-sounds (музыка CC0)
-- https://github.com/effacestudios/Royalty-Free-Music-Pack (CC0-1.0)
-
-Каталог редактируется в `public/music/playlist.json` — добавляйте свои CC0-файлы прямо в репозиторий.
-
----
-
-## 📡 API
-
-`GET /api/health` · `GET /api/hub` · `POST /api/campaigns` · `/api/campaigns/join` · `POST /api/characters` · `PATCH|DELETE /api/characters/[id]` · `/api/characters/[id]/{inventory,level-up,rest,death-save}` · `/api/characters/transfer` · `POST /api/sessions` · `POST /api/encounters` · `PATCH /api/encounters/[id]` · `/api/encounters/[id]/{hp,attack,undo,award-xp}` · `POST /api/dice-rolls` · `POST /api/rolls/check` · `POST /api/rolls/concentration` · `PATCH /api/boards/[campaignId]` · `/api/boards/[campaignId]/{token,ping,draw,group-save}` · `POST /api/messages` · `/api/messages/[id]/react` · `POST /api/shops` · `POST /api/chest` · `POST /api/polls/vote` · `POST /api/assets` · `POST /api/deepseek` · `POST /api/auth/{register,login,logout,forgot,reset,account}` · `POST /api/telegram/{test,remind}` · `GET /api/cron/reminders` · `GET /api/campaigns/[id]/{export,members}` · `POST /api/campaigns/import`
-
----
+После изменения переменных нужен **Redeploy**: старые сборки не подхватывают новые значения.
 
 ## 🧪 Проверка
 
@@ -192,9 +157,59 @@ npm run dev
 npx next typegen
 npm exec tsc -- --noEmit --pretty false
 npm run build
-npx drizzle-kit push
+curl -s http://localhost:3000/api/health
 ```
+
+## 📡 Основные API
+
+<details>
+<summary><b>Показать маршруты</b></summary>
+
+| Маршрут | Назначение |
+| --- | --- |
+| `GET /api/hub` · `GET /api/sync` | Снимок кампании с учётом прав |
+| `POST /api/campaigns` · `/join` | Создание кампании и вход по коду |
+| `/api/characters/[id]` | Лист, инвентарь, отдых, повышение уровня, спасброски от смерти |
+| `/api/encounters/[id]` | Бой: атака, HP, XP, отмена действий |
+| `/api/rolls/check` · `/rolls/concentration` | Проверки (в т.ч. тайные) и концентрация |
+| `/api/boards/[campaignId]` | Карта, сцена, освещение, указка |
+| `/api/music/github` | Каталог CC0-треков из GitHub |
+| `/api/messages` · `/api/polls/vote` | Чат, шёпот, голосования за дату |
+| `/api/chest` · `/api/shops` | Сундук партии и лавки |
+| `/api/auth/*` | Регистрация, вход, сброс пароля, смена email |
+| `/api/deepseek` | Серверный прокси к DeepSeek |
+| `/api/health` | Состояние БД и доступных сервисов |
+
+</details>
+
+## 🗺 Roadmap
+
+- [x] Листы персонажей и трекер инициативы
+- [x] Карта с туманом войны и освещением
+- [x] Чат, сцена, ТВ-экран, мир и экономика
+- [x] Песенник с реальными треками из GitHub
+- [x] Аккаунты, роли и тайные заметки
+- [ ] Шаблоны заклинаний с уроном по площади
+- [ ] Экспорт кампании в PDF одной книгой
+- [ ] Голосовой чат прямо в столе
+
+## 🎼 Музыка
+
+Песенник использует только **CC0 / общественное достояние**: файлы лежат на GitHub и загружаются
+напрямую, сайт их не хранит.
+
+- [AlienOmen/ufo-cut-assets](https://github.com/AlienOmen/ufo-cut-assets) — CC0-1.0
+- [jupixels/game-sounds](https://github.com/jupixels/game-sounds) — музыка CC0 (Cethiel, Umplix)
+- [effacestudios/Royalty-Free-Music-Pack](https://github.com/effacestudios/Royalty-Free-Music-Pack) — CC0-1.0
+
+Свой трек добавляется в `public/music/playlist.json` (нужны `url` и `duration`).
 
 ---
 
-<p align="center"><i>Roll for initiative. 🎲</i></p>
+<div align="center">
+
+**[D&D Master Hub](https://solid-octo-robot-blue.vercel.app)** · сделано для ночей, когда кубики уже не помещаются на столе
+
+<sub>D&D 5e — товарный знак Wizards of the Coast. Проект некоммерческий и не связан с WotC.</sub>
+
+</div>
