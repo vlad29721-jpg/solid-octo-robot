@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   BookOpen, Bot, ChevronDown, Copy, Dices, Globe2, LayoutDashboard, Map as MapIcon, MessageCircle, Monitor, Music2, Radio, RefreshCw,
-  ScrollText, Shield, Sparkles, Store, Swords, Users, Wifi, WifiOff, Mic, MoreHorizontal, X,
+  ScrollText, Shield, Sparkles, Store, Swords, Users, Wifi, WifiOff,
 } from "lucide-react";
 import { SceneLayer } from "@/components/scene/scene-layer";
 import { useEffect, useState } from "react";
@@ -30,7 +30,6 @@ const ALL_NAV = [
   { href: "/initiative", label: "Бой", icon: Swords, dmOnly: false },
   { href: "/dice", label: "Кубики", icon: Dices, dmOnly: false },
   { href: "/chat", label: "Чат", icon: MessageCircle, dmOnly: false },
-  { href: "/voice", label: "Голос", icon: Mic, dmOnly: false },
   { href: "/world", label: "Мир", icon: Globe2, dmOnly: false },
   { href: "/economy", label: "Торговля", icon: Store, dmOnly: false },
   { href: "/music", label: "Песенник", icon: Music2, dmOnly: false },
@@ -48,8 +47,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const setQuickRollOpen = useHubStore((state) => state.setQuickRollOpen);
   const NAV_ITEMS = ALL_NAV.filter((item) => !item.dmOnly || isDm);
   const [online, setOnline] = useState(true);
-  const [moreOpen, setMoreOpen] = useState(false);
-  useEffect(() => { setMoreOpen(false); }, [pathname]);
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
     update();
@@ -149,7 +146,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         {!online ? <div className="sticky top-[57px] z-20 flex items-center justify-center gap-2 bg-amber-600/90 px-3 py-1.5 text-xs font-semibold text-black"><WifiOff className="h-3.5 w-3.5" />Нет сети — показаны сохранённые данные. Изменения отправятся, когда связь вернётся.</div> : null}
-        <main className="mx-auto max-w-[1500px] px-3 pb-[calc(env(safe-area-inset-bottom)+92px)] pt-4 sm:px-6 sm:pt-7 md:pb-10 lg:px-8">
+        <main className="safe-bottom mx-auto max-w-[1500px] px-3 pt-5 sm:px-6 sm:pt-7 lg:px-8">
           {isLoading ? <PageSkeleton /> : isError ? (
             <EmptyState title="Не удалось загрузить хронику" description={error?.message ?? "Проверьте подключение к базе данных и попробуйте ещё раз."} actionLabel="Повторить" onAction={refetch} compact />
           ) : !campaign ? (
@@ -160,58 +157,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      {moreOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Все разделы">
-          <button type="button" aria-label="Закрыть" onClick={() => setMoreOpen(false)} className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
-          <motion.div initial={{ y: 260 }} animate={{ y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 32 }} className="glass absolute inset-x-0 bottom-0 max-h-[78vh] overflow-y-auto rounded-t-3xl border-x-0 border-b-0 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/25" />
-            <div className="mb-3 flex items-center justify-between"><p className="font-display text-lg text-parchment">Все разделы</p><button type="button" onClick={() => setMoreOpen(false)} aria-label="Закрыть" className="rounded-lg border border-white/10 p-1.5 text-muted-ink"><X className="h-4 w-4" /></button></div>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {NAV_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const active = pathname === item.href;
-                return (
-                  <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} className={cn("relative flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 text-center text-[11px] font-semibold transition", active ? "border-gold/45 bg-gold/12 text-gold" : "border-white/10 bg-black/25 text-parchment/80")}>
-                    <Icon className="h-5 w-5" />
-                    <span className="leading-tight">{item.label}</span>
-                    {item.href === "/chat" && unread ? <span className="absolute right-2 top-2 rounded-full bg-crimson px-1.5 text-[9px] font-bold text-white">{unread}</span> : null}
-                  </Link>
-                );
-              })}
-            </div>
-            {campaign ? (
-              <button type="button" onClick={() => { setMoreOpen(false); void handleCopyInvite(); }} className="mt-4 flex w-full items-center justify-between gap-2 rounded-2xl border border-white/10 bg-black/30 px-3 py-3 text-left">
-                <span><span className="block text-[10px] uppercase tracking-[0.16em] text-muted-ink">Код приглашения</span><span className="font-mono text-sm font-bold tracking-wider text-gold">{campaign.inviteCode}</span></span>
-                <Copy className="h-4 w-4 text-gold" />
-              </button>
-            ) : null}
-          </motion.div>
-        </div>
-      ) : null}
-
-      <Link href="/voice" aria-label="Голосовой чат" className={cn("fixed bottom-[calc(env(safe-area-inset-bottom)+76px)] right-4 z-40 grid h-12 w-12 place-items-center rounded-2xl border shadow-[0_14px_38px_-14px_rgba(0,0,0,0.9)] transition active:scale-95 md:hidden", pathname === "/voice" ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-200" : "border-gold/40 bg-black/70 text-gold backdrop-blur-xl")}>
-        <Mic className="h-5 w-5" />
-      </Link>
-
-      <nav className="glass fixed inset-x-0 bottom-0 z-40 rounded-none border-x-0 border-b-0 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-1 md:hidden">
-        <div className="mx-auto flex max-w-lg items-stretch justify-between gap-1 px-2">
-          {[NAV_ITEMS[0], NAV_ITEMS.find((item) => item.href === "/characters"), NAV_ITEMS.find((item) => item.href === "/initiative"), NAV_ITEMS.find((item) => item.href === "/chat")].filter(Boolean).map((item) => {
-            if (!item) return null;
+      <nav className="glass fixed inset-x-0 bottom-0 z-40 rounded-none border-x-0 border-b-0 px-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1.5 md:hidden">
+        <div className="thin-scrollbar flex items-stretch justify-start gap-0.5 overflow-x-auto">
+          {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
             const Icon = item.icon;
             return (
-              <Link key={item.href} href={item.href} className={cn("relative flex min-h-[54px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-semibold transition-colors", active ? "text-gold" : "text-muted-ink")}>
-                {active ? <motion.span layoutId="bottom-active" className="absolute inset-0 rounded-xl border border-gold/20 bg-gold/[0.1]" transition={{ type: "spring", stiffness: 400, damping: 32 }} /> : null}
-                <Icon className="relative h-5 w-5" />
+              <Link key={item.href} href={item.href} className={cn("relative flex min-w-[58px] flex-1 flex-col items-center gap-1 rounded-xl px-1 py-1.5 text-[10px] font-semibold transition-colors", active ? "text-gold" : "text-muted-ink")}>
+                {active ? <motion.span layoutId="bottom-active" className="absolute inset-x-1 inset-y-0 rounded-xl border border-gold/20 bg-gold/[0.1]" transition={{ type: "spring", stiffness: 400, damping: 32 }} /> : null}
+                <Icon className="relative h-4.5 w-4.5" />
                 <span className="relative whitespace-nowrap">{item.label}</span>
-                {item.href === "/chat" && unread ? <span className="absolute right-2 top-1 rounded-full bg-crimson px-1.5 text-[9px] font-bold text-white">{unread}</span> : null}
               </Link>
             );
           })}
-          <button type="button" onClick={() => setMoreOpen(true)} className={cn("relative flex min-h-[54px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-semibold transition-colors", moreOpen ? "text-gold" : "text-muted-ink")}>
-            <MoreHorizontal className="h-5 w-5" />
-            <span>Ещё</span>
-          </button>
         </div>
       </nav>
 

@@ -15,7 +15,16 @@ export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
 
 export function Select({ className, children, ...props }: ComponentProps<"select">) {
   return (
-    <select className={cn("field cursor-pointer appearance-none bg-[length:14px] bg-[right_0.8rem_center] bg-no-repeat pr-9", className)} style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23D4AF37' stroke-width='1.6' fill='none'/%3E%3C/svg%3E\")" }} {...props}>
+    <select
+      className={cn("field cursor-pointer appearance-none pr-9", className)}
+      style={{
+        backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23D4AF37' stroke-width='1.6' fill='none'/%3E%3C/svg%3E\")",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 0.8rem center",
+        backgroundSize: "12px 8px",
+      }}
+      {...props}
+    >
       {children}
     </select>
   );
